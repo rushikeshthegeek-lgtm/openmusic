@@ -4,9 +4,10 @@ const path = require("path");
 const COOKIE_FILE = process.env.YTDLP_COOKIES || "";
 const USER_AGENT = process.env.YTDLP_USER_AGENT || "";
 const EXTRA_YTDLP_ARGS = process.env.YTDLP_ARGS ? process.env.YTDLP_ARGS.split(" ").filter(Boolean) : [];
+const DEFAULT_YTDLP_ARGS = ["--js-runtimes", "node"];
 
 function buildYtdlpArgs(args = []) {
-    const result = [];
+    const result = [...DEFAULT_YTDLP_ARGS];
     if (COOKIE_FILE) {
         result.push("--cookies", COOKIE_FILE);
     }
