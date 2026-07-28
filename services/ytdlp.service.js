@@ -1,13 +1,17 @@
-const { exec, spawn } = require("child_process");
+const { exec, execFile, spawn } = require("child_process");
 const path = require("path");
 
 const COOKIE_FILE = process.env.YTDLP_COOKIES || "";
+const USER_AGENT = process.env.YTDLP_USER_AGENT || "";
 const EXTRA_YTDLP_ARGS = process.env.YTDLP_ARGS ? process.env.YTDLP_ARGS.split(" ").filter(Boolean) : [];
 
 function buildYtdlpArgs(args = []) {
     const result = [];
     if (COOKIE_FILE) {
         result.push("--cookies", COOKIE_FILE);
+    }
+    if (USER_AGENT) {
+        result.push("--user-agent", USER_AGENT);
     }
     if (EXTRA_YTDLP_ARGS.length) {
         result.push(...EXTRA_YTDLP_ARGS);
@@ -38,16 +42,19 @@ class YTDLP {
 
             console.log("Searching:", key);
 
-            const command =
-                `yt-dlp --flat-playlist --dump-single-json "ytsearch5:${key}"`;
+            const args = buildYtdlpArgs([
+                "--flat-playlist",
+                "--dump-single-json",
+                `ytsearch5:${key}`
+            ]);
 
-            exec(command, {
+            execFile("yt-dlp", args, {
                 maxBuffer: 1024 * 1024 * 10
             },
                 (err, stdout, stderr) => {
                     if (err) {
                         console.log(stderr);
-                        return reject(err);
+                        return reject(new Error(`yt-dlp search failed: ${stderr.trim()}`));
                     }
                     try {
                         const data =
