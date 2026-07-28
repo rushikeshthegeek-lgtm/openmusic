@@ -1,6 +1,20 @@
 const { exec, spawn } = require("child_process");
 const path = require("path");
 
+const COOKIE_FILE = process.env.YTDLP_COOKIES || "";
+const EXTRA_YTDLP_ARGS = process.env.YTDLP_ARGS ? process.env.YTDLP_ARGS.split(" ").filter(Boolean) : [];
+
+function buildYtdlpArgs(args = []) {
+    const result = [];
+    if (COOKIE_FILE) {
+        result.push("--cookies", COOKIE_FILE);
+    }
+    if (EXTRA_YTDLP_ARGS.length) {
+        result.push(...EXTRA_YTDLP_ARGS);
+    }
+    return result.concat(args);
+}
+
 class YTDLP {
 
     constructor() {
@@ -83,69 +97,64 @@ class YTDLP {
                 "../downloads/%(title)s.%(ext)s"
             );
 
-            const process = spawn("yt-dlp", [
+            const args = buildYtdlpArgs([
                 "-f", "bestaudio",
                 "-o", output,
                 url
             ]);
+
+            const process = spawn("yt-dlp", args);
+            let stderr = "";
 
             process.stdout.on("data", data => {
                 console.log(data.toString());
             });
 
             process.stderr.on("data", data => {
+                stderr += data.toString();
                 console.log(data.toString());
             });
 
             process.on("close", code => {
-
-                if (code === 0)
+                if (code === 0) {
                     resolve();
-                else
-                    reject(new Error("Download failed"));
-
+                } else {
+                    reject(new Error(`Download failed: ${stderr.trim() || code}`));
+                }
             });
 
         });
 
     }
 
-    getStreamURL(id){
+    getStreamURL(id) {
 
-        return new Promise((resolve,reject)=>{
+        return new Promise((resolve, reject) => {
 
+            const video = `https://www.youtube.com/watch?v=${id}`;
+            const args = buildYtdlpArgs(["-f", "bestaudio", "-g", video]);
+            const process = spawn("yt-dlp", args);
+            let stdout = "";
+            let stderr = "";
 
-            const video =
-            `https://www.youtube.com/watch?v=${id}`;
+            process.stdout.on("data", data => {
+                stdout += data.toString();
+            });
 
+            process.stderr.on("data", data => {
+                stderr += data.toString();
+                console.log(data.toString());
+            });
 
-            exec(
-                `yt-dlp -f bestaudio -g "${video}"`,
-                {
-                    maxBuffer:1024 * 1024 * 5
-                },
-                (err,stdout,stderr)=>{
-
-
-                    if(err){
-
-                        console.log(stderr);
-
-                        return reject(err);
-
-                    }
-
-
-                    resolve(
-                        stdout.trim()
-                    );
-
-
-                });
-
+            process.on("close", code => {
+                if (code === 0) {
+                    resolve(stdout.trim());
+                } else {
+                    reject(new Error(`yt-dlp failed with code ${code}: ${stderr.trim() || "unknown error"}`));
+                }
+            });
 
         });
-
 
     }
 
