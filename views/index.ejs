@@ -1,0 +1,174 @@
+<%- include("partials/header") %>
+
+<div class="layout">
+  <aside class="sidebar">
+
+  <div class="logo">
+    🎵 Open Music
+  </div>
+
+
+  <div class="sidebar-search">
+
+    <input 
+    id="searchInput" 
+    placeholder="Search songs, artists..." 
+    autocomplete="off">
+
+  </div>
+  <nav>
+
+    <a class="active">
+      🏠 Home
+    </a>
+    <a class="coming-soon">
+      ❤️ Favorites
+    </a>
+
+    <a class="coming-soon">
+      📚 Library
+    </a>
+
+  </nav>
+
+</aside>
+
+  <main class="content">
+    <header class="topbar">
+      <button class="menu-btn">☰</button>
+    </header>
+
+    <!-- ======================
+         HOME SECTION
+    ======================= -->
+    <section id="home">
+      <section class="hero">
+        <div class="hero-overlay">
+          <p>Good Evening 👋</p>
+          <h1>Discover your next favorite song</h1>
+          <span>Trending music curated for you</span>
+        </div>
+      </section>
+
+      <section class="home-section">
+        <h2>🔥 Trending Now</h2>
+        <div id="trending" class="music-row"></div>
+      </section>
+
+      <section class="home-section">
+        <h2>♨️ Discover Playlists</h2>
+        <div id="recommended" class="music-row"></div>
+      </section>
+    </section>
+
+    <!-- ======================
+         SEARCH RESULTS
+    ======================= -->
+    <div hidden id="searchResultsLabel">Results for "<span id="searchQuery"></span>":</div>
+    <section id="results" class="music-grid">
+    </section>
+  </main>
+</div>
+
+<!-- ======================
+     MINI PLAYER
+======================= -->
+<div class="player">
+  <div class="track">
+    <img id="cover" src="/images/default.png">
+
+    <div class="track-info">
+      <h4 id="title">No Song Playing</h4>
+      <p id="artist">Select a song</p>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="prevBtn">⏮</button>
+    <button id="playBtn" class="main-play">▶</button>
+    <button id="nextBtn">⏭</button>
+  </div>
+
+  <div class="progress-area">
+    <span id="currentTime">0:00</span>
+    <input id="progress" type="range" min="0" max="100" value="0">
+    <span id="duration">0:00</span>
+  </div>
+
+  <div class="volume">
+    🔊
+    <input id="volume" type="range" min="0" max="1" step="0.01" value="1">
+  </div>
+
+  <div id="playerLoader" class="player-loader hidden">
+    <div class="loader-spinner"></div>
+    <span>Loading song...</span>
+  </div>
+
+  <audio id="audio"></audio>
+</div>
+
+<!-- ======================
+     FULL SCREEN PLAYER
+======================= -->
+<div class="full-player" id="fullPlayer">
+  <button class="close-player" id="closePlayer">✕</button>
+
+  <div class="background-art" id="backgroundArt"></div>
+
+  <div class="full-content">
+    <img id="fullCover" src="/images/default.png">
+
+    <h1 id="fullTitle">No Song Playing</h1>
+    <p id="fullArtist">Select a song</p>
+
+    <div class="full-progress">
+      <span id="fullCurrent">0:00</span>
+      <input id="fullProgress" type="range" min="0" max="100" value="0">
+      <span id="fullDuration">0:00</span>
+    </div>
+
+    <div class="full-controls">
+      <button id="shuffleBtn">🔀</button>
+      <button id="fullPrevBtn">⏮</button>
+      <button id="fullPlay" class="big-play">▶</button>
+      <button id="fullNextBtn">⏭</button>
+      <button>❤️</button>
+    </div>
+  </div>
+
+  <div class="queue-panel">
+    <h2>Up Next</h2>
+    <div id="queueList"></div>
+  </div>
+</div>
+
+<nav class="mobile-nav">
+    <a id="mobileHome">🏠</a>
+    <a id="mobileSearch">🔍</a>
+    <a id="mobileFav">❤️</a>
+    <a id="mobileLibrary">📚</a>
+</nav>
+
+<div class="mobile-search-overlay" id="mobileSearchOverlay">
+
+    <div class="mobile-search-header">
+
+        <button id="closeSearch">←</button>
+
+        <input
+            id="mobileSearchInput"
+            placeholder="Search songs, artists..."
+            autocomplete="off">
+
+    </div>
+
+    <div class="mobile-search-results" hidden>
+        Results for "<span id="mobileSearchLabel"></span>"
+    </div>
+
+    <section id="mobileResults" class="music-grid"></section>
+
+</div>
+
+<%- include("partials/footer") %>
