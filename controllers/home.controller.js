@@ -139,3 +139,132 @@ exports.stream = async (req, res) => {
 
 };
 
+exports.streamVideo = async (req, res) => {
+
+    try {
+
+        const id = req.params.id;
+
+        const url = await ytdlp.getVideoURL(id);
+
+        console.log('streamVideo chosen URL:', url);
+
+        // If caller only wants metadata about the stream, return it as JSON
+        if (req.query.meta === '1') {
+            const meta = { url };
+
+            // Detect likely audio-only or playlist/manifest URLs
+            const low = url.toLowerCase();
+            if (low.includes('.m4a') || low.includes('mime=audio') || low.includes('.webm') && low.includes('audio')) {
+                meta.embed = true;
+                meta.embedUrl = `https://www.youtube.com/embed/${id}?autoplay=1`;
+            }
+            if (low.includes('.m3u8') || low.includes('playlist') || low.includes('manifest')) {
+                meta.embed = true;
+                meta.embedUrl = `https://www.youtube.com/embed/${id}?autoplay=1`;
+            }
+
+            return res.json(meta);
+        }
+
+        // Proxy the remote video and forward Range headers to support seeking
+        const { URL } = require('url');
+        const parsed = new URL(url);
+        const protocol = parsed.protocol === 'https:' ? require('https') : require('http');
+
+        const options = {
+            headers: {}
+        };
+
+        if (req.headers.range) {
+            options.headers.Range = req.headers.range;
+        }
+
+        const requestOptions = {
+            hostname: parsed.hostname,
+            path: parsed.pathname + (parsed.search || ''),
+            protocol: parsed.protocol,
+            port: parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
+            headers: options.headers
+        };
+
+        protocol.get(requestOptions, (proxyRes) => {
+
+            // Forward status and headers
+            const headers = Object.assign({}, proxyRes.headers);
+
+            // Remove hop-by-hop headers that may confuse clients
+            delete headers['transfer-encoding'];
+
+            res.writeHead(proxyRes.statusCode, headers);
+            proxyRes.pipe(res);
+
+        }).on('error', (err) => {
+            console.error('Proxy error', err);
+            res.status(500).end();
+        });
+
+    } catch (err) {
+
+        console.error(err);
+
+        res.status(500).json({
+            success: false
+        });
+
+    }
+
+};
+
+exports.videoFormats = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const formats = await ytdlp.getVideoFormats(id);
+        res.json({ success: true, formats });
+    } catch (err) {
+        console.error('videoFormats error', err);
+        res.status(500).json({ success: false });
+    }
+};
+
+exports.streamVideoFormat = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const format = req.params.format;
+
+        // Get actual direct URL for specified format
+        const url = await ytdlp.getVideoURLByFormat(id, format);
+
+        console.log('streamVideoFormat chosen URL:', url, 'format:', format);
+
+        // Proxy similar to streamVideo
+        const { URL } = require('url');
+        const parsed = new URL(url);
+        const protocol = parsed.protocol === 'https:' ? require('https') : require('http');
+
+        const requestOptions = {
+            hostname: parsed.hostname,
+            path: parsed.pathname + (parsed.search || ''),
+            protocol: parsed.protocol,
+            port: parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
+            headers: {}
+        };
+
+        if (req.headers.range) requestOptions.headers.Range = req.headers.range;
+
+        protocol.get(requestOptions, (proxyRes) => {
+            const headers = Object.assign({}, proxyRes.headers);
+            delete headers['transfer-encoding'];
+            res.writeHead(proxyRes.statusCode, headers);
+            proxyRes.pipe(res);
+        }).on('error', (err) => {
+            console.error('Proxy error', err);
+            res.status(500).end();
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false });
+    }
+};
+

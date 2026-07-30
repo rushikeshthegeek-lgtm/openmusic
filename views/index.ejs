@@ -171,4 +171,15 @@
 
 </div>
 
+<!-- Video Modal -->
+<div id="videoModal" class="video-modal hidden">
+  <button id="closeVideo" class="close-video">✕</button>
+  <video id="videoPlayer" controls preload="metadata" style="max-width:100%;width:100%;height:auto;display:block;margin:0 auto;"></video>
+  <div class="quality-controls">
+    <label for="qualitySelect">Quality:</label>
+    <select id="qualitySelect"></select>
+  </div>
+  <audio id="videoAudio" crossorigin="anonymous" style="display:none"></audio>
+</div>
+
 <%- include("partials/footer") %>

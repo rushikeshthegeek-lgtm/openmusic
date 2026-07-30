@@ -764,6 +764,60 @@ body {
 .fade-link:hover {
   opacity: 0.5;
 }
+/* Video modal */
+.video-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.7);
+  z-index: 4000;
+  padding: 20px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.video-modal.active {
+  pointer-events: auto;
+  opacity: 1;
+}
+.video-modal.hidden {
+  display: none;
+}
+.video-modal .close-video {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 4100;
+  background: rgba(255,255,255,0.08);
+  border: none;
+  color: white;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.quality-controls {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  z-index: 4100;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.quality-controls label {
+  font-size: 14px;
+}
+.quality-controls select {
+  background: rgba(255,255,255,0.06);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 6px 8px;
+  border-radius: 8px;
+}
 .coming-soon {
   position: relative;
   display: inline-block;
