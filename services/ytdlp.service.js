@@ -4,7 +4,10 @@ const path = require("path");
 const COOKIE_FILE = process.env.YTDLP_COOKIES || "";
 const USER_AGENT = process.env.YTDLP_USER_AGENT || "";
 const EXTRA_YTDLP_ARGS = process.env.YTDLP_ARGS ? process.env.YTDLP_ARGS.split(" ").filter(Boolean) : [];
-const DEFAULT_YTDLP_ARGS = ["--js-runtimes", "node"];
+const DEFAULT_YTDLP_ARGS = [
+    "--js-runtimes",
+    "node:/usr/local/bin/node"
+];
 
 function buildYtdlpArgs(args = []) {
     const result = [...DEFAULT_YTDLP_ARGS];
@@ -49,7 +52,11 @@ class YTDLP {
                 `ytsearch5:${key}`
             ]);
 
-            execFile("yt-dlp", args, {
+            console.log("yt-dlp executable:", "/opt/venv/bin/yt-dlp");
+            console.log("yt-dlp args:", args);
+            console.log("PATH:", process.env.PATH);
+
+            execFile("/opt/venv/bin/yt-dlp", args, {
                 maxBuffer: 1024 * 1024 * 10
             },
                 (err, stdout, stderr) => {
@@ -110,8 +117,11 @@ class YTDLP {
                 "-o", output,
                 url
             ]);
+            console.log("yt-dlp executable:", "/opt/venv/bin/yt-dlp");
+            console.log("yt-dlp args:", args);
+            console.log("PATH:", process.env.PATH);
 
-            const process = spawn("yt-dlp", args);
+            const process = spawn("/opt/venv/bin/yt-dlp", args);
             let stderr = "";
 
             process.stdout.on("data", data => {
@@ -141,7 +151,10 @@ class YTDLP {
 
             const video = `https://www.youtube.com/watch?v=${id}`;
             const args = buildYtdlpArgs(["-f", "bestaudio", "-g", video]);
-            const process = spawn("yt-dlp", args);
+            console.log("yt-dlp executable:", "/opt/venv/bin/yt-dlp");
+            console.log("yt-dlp args:", args);
+            console.log("PATH:", process.env.PATH);
+            const process = spawn("/opt/venv/bin/yt-dlp", args);
             let stdout = "";
             let stderr = "";
 
