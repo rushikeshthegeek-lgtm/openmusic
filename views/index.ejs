@@ -173,13 +173,31 @@
 
 <!-- Video Modal -->
 <div id="videoModal" class="video-modal hidden">
-  <button id="closeVideo" class="close-video">✕</button>
-  <video id="videoPlayer" controls preload="metadata" style="max-width:100%;width:100%;height:auto;display:block;margin:0 auto;"></video>
-  <div class="quality-controls">
-    <label for="qualitySelect">Quality:</label>
-    <select id="qualitySelect"></select>
+  <div class="video-modal-shell">
+    <button id="closeVideo" class="close-video" aria-label="Close video player">✕</button>
+    <div class="video-modal-content">
+      <video id="videoPlayer" controls preload="metadata" playsinline></video>
+      <div class="quality-controls">
+        <label for="qualitySelect">Quality:</label>
+        <select id="qualitySelect"></select>
+      </div>
+    </div>
   </div>
   <audio id="videoAudio" crossorigin="anonymous" style="display:none"></audio>
+</div>
+
+<div id="playbackChoiceModal" class="playback-choice-modal hidden" aria-modal="true" role="dialog">
+  <div class="playback-choice-card">
+    <button id="playbackChoiceClose" class="playback-choice-close" aria-label="Close playback choice">✕</button>
+    <div class="playback-choice-body">
+      <h3 id="playbackChoiceTitle">Play this item as</h3>
+      <p>Choose how you’d like to listen to the track.</p>
+      <div class="playback-choice-actions">
+        <button id="playbackChoiceVideoBtn" class="choice-btn choice-video">Video</button>
+        <button id="playbackChoiceAudioBtn" class="choice-btn choice-audio">Audio</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <%- include("partials/footer") %>

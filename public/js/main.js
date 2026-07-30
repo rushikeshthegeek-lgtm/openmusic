@@ -33,11 +33,19 @@ const videoModal = document.getElementById("videoModal");
 const videoPlayer = document.getElementById("videoPlayer");
 const closeVideo = document.getElementById("closeVideo");
 const videoAudio = document.getElementById("videoAudio");
+const playbackChoiceModal = document.getElementById("playbackChoiceModal");
+const playbackChoiceTitle = document.getElementById("playbackChoiceTitle");
+const playbackChoiceVideoBtn = document.getElementById("playbackChoiceVideoBtn");
+const playbackChoiceAudioBtn = document.getElementById("playbackChoiceAudioBtn");
+const playbackChoiceClose = document.getElementById("playbackChoiceClose");
 let _syncAttached = false;
 let _syncListeners = {};
 let _rateResetTimer = null;
 let timer;
 let mobileTimer;
+let _pendingPlayback = null;
+let _pinchZoomState = { active: false, initialDistance: 0, initialScale: 1, originX: 0, originY: 0 };
+let _playbackChoiceEventsAttached = false;
 
 searchInput.addEventListener("input", () => {
   handleSearchInput(searchInput, results, "searchQuery", "home");
@@ -254,13 +262,7 @@ function renderSongs(songs, container = results) {
             ${song.uploader}
         </p>`;
     card.onclick = () => {
-      const playVideo = confirm("Play video? Press OK for Video, Cancel for Audio.");
-      if (playVideo) {
-        showVideoPlayer(song);
-        return;
-      }
-      currentIndex = songs.indexOf(song);
-      playSong(song);
+      showPlaybackChoice(song, songs);
     };
 
     container.appendChild(card);
@@ -482,6 +484,101 @@ if (closeVideo) {
     }
   };
 }
+
+function showPlaybackChoice(song, songs) {
+  _pendingPlayback = { song, songs };
+  queue = songs || queue || [];
+  if (!playbackChoiceModal || !playbackChoiceTitle) return;
+  playbackChoiceTitle.innerText = `Play "${song.title}" as:`;
+  playbackChoiceModal.classList.remove('hidden');
+  playbackChoiceModal.classList.add('active');
+  attachPlaybackChoiceEvents();
+}
+
+function hidePlaybackChoice() {
+  if (!playbackChoiceModal) return;
+  playbackChoiceModal.classList.remove('active');
+  playbackChoiceModal.classList.add('hidden');
+  _pendingPlayback = null;
+}
+
+function selectPlaybackMode(useVideo) {
+  if (!_pendingPlayback) {
+    hidePlaybackChoice();
+    return;
+  }
+  const { song, songs } = _pendingPlayback;
+  if (!useVideo) {
+    queue = songs || queue || [];
+    currentIndex = queue.indexOf(song);
+    playSong(song);
+  } else {
+    showVideoPlayer(song);
+  }
+  hidePlaybackChoice();
+}
+
+function attachPlaybackChoiceEvents() {
+  if (_playbackChoiceEventsAttached) return;
+  _playbackChoiceEventsAttached = true;
+  if (playbackChoiceVideoBtn) playbackChoiceVideoBtn.addEventListener('click', () => selectPlaybackMode(true));
+  if (playbackChoiceAudioBtn) playbackChoiceAudioBtn.addEventListener('click', () => selectPlaybackMode(false));
+  if (playbackChoiceClose) playbackChoiceClose.addEventListener('click', hidePlaybackChoice);
+  if (playbackChoiceModal) {
+    playbackChoiceModal.addEventListener('click', (event) => {
+      if (event.target === playbackChoiceModal) hidePlaybackChoice();
+    });
+  }
+}
+
+function setupVideoZoom() {
+  if (!videoPlayer) return;
+  videoPlayer.style.transform = 'scale(1)';
+  videoPlayer.style.transformOrigin = 'center center';
+  videoPlayer.style.touchAction = 'none';
+
+  const getTouchDistance = (touches) => {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.hypot(dx, dy);
+  };
+
+  const getTouchCenter = (touches) => ({
+    x: (touches[0].clientX + touches[1].clientX) / 2,
+    y: (touches[0].clientY + touches[1].clientY) / 2,
+  });
+
+  videoPlayer.addEventListener('touchstart', (event) => {
+    if (event.touches.length !== 2) return;
+    event.preventDefault();
+    _pinchZoomState.active = true;
+    _pinchZoomState.initialDistance = getTouchDistance(event.touches);
+    _pinchZoomState.initialScale = Number(videoPlayer.style.transform.replace(/^scale\(([^)]+)\)$/, '$1')) || 1;
+    const center = getTouchCenter(event.touches);
+    videoPlayer.style.transformOrigin = `${(center.x / videoPlayer.clientWidth) * 100}% ${(center.y / videoPlayer.clientHeight) * 100}%`;
+  }, { passive: false });
+
+  videoPlayer.addEventListener('touchmove', (event) => {
+    if (!_pinchZoomState.active || event.touches.length !== 2) return;
+    event.preventDefault();
+    const currentDistance = getTouchDistance(event.touches);
+    const scale = Math.min(3, Math.max(1, _pinchZoomState.initialScale * (currentDistance / _pinchZoomState.initialDistance)));
+    videoPlayer.style.transform = `scale(${scale})`;
+  }, { passive: false });
+
+  videoPlayer.addEventListener('touchend', (event) => {
+    if (!_pinchZoomState.active) return;
+    if (event.touches.length < 2) {
+      _pinchZoomState.active = false;
+      const currentScale = Number(videoPlayer.style.transform.replace(/^scale\(([^)]+)\)$/, '$1')) || 1;
+      if (currentScale < 1.01) {
+        videoPlayer.style.transform = 'scale(1)';
+      }
+    }
+  });
+}
+
+if (videoPlayer) setupVideoZoom();
 
 async function playSong(song) {
   currentSong = song;
@@ -711,14 +808,7 @@ function renderHomeSongs(songs, sectionId) {
     `;
 
     card.onclick = () => {
-      const playVideo = confirm("Play video? Press OK for Video, Cancel for Audio.");
-      if (playVideo) {
-        showVideoPlayer(song);
-        return;
-      }
-      queue = songs;
-      currentIndex = songs.indexOf(song);
-      playSong(song);
+        showPlaybackChoice(song, songs);
     };
 
     container.appendChild(card);
