@@ -117,23 +117,24 @@ class YTDLP {
                 "-o", output,
                 url
             ]);
+
             console.log("yt-dlp executable:", "/opt/venv/bin/yt-dlp");
             console.log("yt-dlp args:", args);
             console.log("PATH:", process.env.PATH);
 
-            const process = spawn("/opt/venv/bin/yt-dlp", args);
+            const child = spawn("/opt/venv/bin/yt-dlp", args);
             let stderr = "";
 
-            process.stdout.on("data", data => {
+            child.stdout.on("data", data => {
                 console.log(data.toString());
             });
 
-            process.stderr.on("data", data => {
+            child.stderr.on("data", data => {
                 stderr += data.toString();
                 console.log(data.toString());
             });
 
-            process.on("close", code => {
+            child.on("close", code => {
                 if (code === 0) {
                     resolve();
                 } else {
@@ -150,28 +151,39 @@ class YTDLP {
         return new Promise((resolve, reject) => {
 
             const video = `https://www.youtube.com/watch?v=${id}`;
-            const args = buildYtdlpArgs(["-f", "bestaudio", "-g", video]);
+            const args = buildYtdlpArgs([
+                "-f", "bestaudio",
+                "-g",
+                video
+            ]);
+
             console.log("yt-dlp executable:", "/opt/venv/bin/yt-dlp");
             console.log("yt-dlp args:", args);
             console.log("PATH:", process.env.PATH);
-            const process = spawn("/opt/venv/bin/yt-dlp", args);
+
+            const child = spawn("/opt/venv/bin/yt-dlp", args);
+
             let stdout = "";
             let stderr = "";
 
-            process.stdout.on("data", data => {
+            child.stdout.on("data", data => {
                 stdout += data.toString();
             });
 
-            process.stderr.on("data", data => {
+            child.stderr.on("data", data => {
                 stderr += data.toString();
                 console.log(data.toString());
             });
 
-            process.on("close", code => {
+            child.on("close", code => {
                 if (code === 0) {
                     resolve(stdout.trim());
                 } else {
-                    reject(new Error(`yt-dlp failed with code ${code}: ${stderr.trim() || "unknown error"}`));
+                    reject(
+                        new Error(
+                            `yt-dlp failed with code ${code}: ${stderr.trim() || "unknown error"}`
+                        )
+                    );
                 }
             });
 
